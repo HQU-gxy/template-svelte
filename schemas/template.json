@@ -1,0 +1,376 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "title": "Template",
+  "description": "Template for generating a report. \n\nThis schema can be viewed with [atlassian-labs/json-schema-viewer](https://json-schema.app/) or [Redocly/redoc](https://github.com/Redocly/redoc).",
+  "type": "object",
+  "properties": {
+    "imports": {
+      "description": "List of python import statements. Could be .\n\n- `import <module>`\n- `from <module> import <name>`\n\nIt's recommended to import the [builtins](https://docs.python.org/3/library/builtins.html) since\nthey are not imported by default.\n\n`from <module> import *` is not allowed.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "data_sources": {
+      "description": "Data sources that can be used by `PathVariable` in the variables section",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "title": "DictSource",
+            "description": "A data source directly represented as a dictionary/JSON object",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "name of the data source"
+              },
+              "comment": {
+                "type": "string",
+                "description": "comment about the data source. only used for documentation purposes"
+              },
+              "json_schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "description": "JSON schema for the data source. Can be used to validate the data source"
+                  },
+                  {
+                    "type": "string",
+                    "description": "URL or file path to a JSON schema for the data source"
+                  },
+                  {
+                    "type": "null",
+                    "description": "No JSON schema is provided"
+                  }
+                ]
+              },
+              "source_type": {
+                "type": "string",
+                "const": "dict",
+                "description": "must be `dict`"
+              },
+              "data": {
+                "title": "Data",
+                "type": "object",
+                "description": "the data source whose type must be `Dict[str, Any]` (i.e. a JSON object)"
+              }
+            },
+            "required": [
+              "source_type",
+              "name",
+              "data"
+            ]
+          },
+          {
+            "title": "FileSource",
+            "description": "A data source fetch data from a file",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "name of the data source"
+              },
+              "comment": {
+                "type": "string",
+                "description": "comment about the data source. only used for documentation purposes"
+              },
+              "json_schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "description": "JSON schema for the data source. Can be used to validate the data source"
+                  },
+                  {
+                    "type": "string",
+                    "description": "URL or file path to a JSON schema for the data source"
+                  },
+                  {
+                    "type": "null",
+                    "description": "No JSON schema is provided"
+                  }
+                ]
+              },
+              "source_type": {
+                "type": "string",
+                "const": "file",
+                "description": "must be `file`"
+              },
+              "path": {
+                "type": "string",
+                "description": "path to the file"
+              }
+            },
+            "required": [
+              "source_type",
+              "name",
+              "path"
+            ]
+          },
+          {
+            "title": "APISource",
+            "description": "A data source fetch data from an API endpoint",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "name of the data source"
+              },
+              "comment": {
+                "type": "string",
+                "description": "comment about the data source. only used for documentation purposes"
+              },
+              "json_schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "description": "JSON schema for the data source. Can be used to validate the data source"
+                  },
+                  {
+                    "type": "string",
+                    "description": "URL or file path to a JSON schema for the data source"
+                  },
+                  {
+                    "type": "null",
+                    "description": "No JSON schema is provided"
+                  }
+                ]
+              },
+              "source_type": {
+                "type": "string",
+                "const": "api",
+                "description": "must be `api`"
+              },
+              "url": {
+                "type": "string",
+                "description": "URL of the API endpoint"
+              }
+            },
+            "required": [
+              "source_type",
+              "name",
+              "url"
+            ]
+          }
+        ]
+      }
+    },
+    "variables": {
+      "description": "Variables that can be used/evaluated in the `contents` section",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "title": "PathVariable",
+            "description": "A variable extracted from a data source using a JSON path",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "name of the variable"
+              },
+              "json_path": {
+                "type": "string",
+                "description": "JSON path to extract the variable from the data source whose output is a\nJSON object.\nSee also [JSONPath](https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html)"
+              },
+              "comment": {
+                "type": "string",
+                "description": "comment about the variable. only used for documentation purposes"
+              },
+              "formatter": {
+                "type": "string",
+                "description": "a python lambda function that formats the variable. e.g. `lambda x: x.upper()`"
+              },
+              "t": {
+                "type": "string",
+                "description": "a python type. e.g. `str`, `int`, `float`, `bool` `list`, `dict`.\nWill be checked if provided."
+              },
+              "source": {
+                "type": "string",
+                "description": "the name of the data source. must match the name of a data source in the `data_sources` list"
+              },
+              "verifier": {
+                "type": "string",
+                "description": "a python lambda function that verifies the variable. e.g. `lambda\nx: x > 0`. if provided the variable will be checked against this\nfunction."
+              },
+              "preprocessor": {
+                "type": "string",
+                "description": "a python lambda function that preprocesses the variable. e.g.\n`lambda x: x.strip()`. Type check and verification will be done after\npreprocessing."
+              }
+            },
+            "required": [
+              "name",
+              "source",
+              "json_path"
+            ]
+          },
+          {
+            "title": "LiteralVariable",
+            "$comment": "Preprocessor and verifier are omitted intentionally",
+            "description": "A variable with an expression that evaluates to a value",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "name of the variable"
+              },
+              "json_path": {
+                "type": "string",
+                "description": "JSON path to extract the variable from the data source whose output is a\nJSON object.\nSee also [JSONPath](https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html)"
+              },
+              "comment": {
+                "type": "string",
+                "description": "comment about the variable. only used for documentation purposes"
+              },
+              "formatter": {
+                "type": "string",
+                "description": "a python lambda function that formats the variable. e.g. `lambda x: x.upper()`"
+              },
+              "t": {
+                "type": "string",
+                "description": "a python type. e.g. `str`, `int`, `float`, `bool` `list`, `dict`.\nWill be checked if provided."
+              },
+              "expr": {
+                "type": "string",
+                "description": "any valid python expression\n\n`expr` can only refer to variables defined in the `variables` section,\nor the variables/modules imported in the `imports` section."
+              }
+            },
+            "required": [
+              "name",
+              "expr"
+            ]
+          }
+        ]
+      }
+    },
+    "contents": {
+      "description": "content of the template by the order they should be rendered.",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "title": "HtmlContent",
+            "description": "HtmlContent will render a html tag with content and style",
+            "type": "object",
+            "properties": {
+              "tag": {
+                "description": "The tag to be rendered. Each tag will have a different style.",
+                "type": "string",
+                "enum": [
+                  "h1",
+                  "h2",
+                  "h3",
+                  "h4",
+                  "h5",
+                  "h6",
+                  "p",
+                  "em",
+                  "strong",
+                  "blockquote",
+                  "b",
+                  "i",
+                  "u"
+                ]
+              },
+              "content": {
+                "description": "content field will be rendered as the content of this block.\nThe text in the content field will be rendered as is, except\nfor `${<expr>}` wrapped regions. The content in the `${<expr>}` will be\nevaluated as a python expression. The expression can only\nrefer to variables defined in the `variables` section,\nand the variables/modules imported in the `imports` section.\n\nFor example, if the content is `Hello ${name}`, and there's\na variable called `name` in the variables section whose value\nis `world`, the rendered content will be `Hello world`.",
+                "type": "string"
+              },
+              "style": {
+                "title": "Style",
+                "type": "object",
+                "description": "The CSS style applied to this block. See also [CSS reference](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference)",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "tag",
+              "content"
+            ]
+          },
+          {
+            "title": "TableContent",
+            "description": "TableContent will render a table by columns",
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "description": "The data to be rendered. The keys are the column names and the\nvalues are the data in the column. \nThe value can be either a string or a list of numbers.\n\nIf it's a list of numbers, the data will be used as the value of column\ndirectly. If it's a string, it's expected to be `${expr}`, whihc `expr`\nis a python expression (see `LiteralVariable` for more details).\nPlease note that the variable must be defined in the `variables` section,\nand the result of evaluation must be a list of numbers. Further, only one expression\nis allowed in the string. `${expr1} ${expr2}` is illegal.",
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "description": "literal value",
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    {
+                      "description": "lazy expression to be evaluated",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "table_type": {
+                "description": "must be `table`",
+                "type": "string",
+                "const": "table"
+              }
+            },
+            "required": [
+              "data",
+              "table_type"
+            ]
+          },
+          {
+            "title": "PlotContent",
+            "description": "PlotContent will render a plot with the data provided",
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "description": "The data to be rendered. The keys are the column names and the\nvalues are the data in the column. \nThe value can be either a string or a list of numbers.\n\nIf it's a list of numbers, the data will be used as the value of column\ndirectly. If it's a string, it's expected to be `${expr}`, whihc `expr`\nis a python expression (see `LiteralVariable` for more details).\nPlease note that the variable must be defined in the `variables` section,\nand the result of evaluation must be a list of numbers. Further, only one expression\nis allowed in the string. `${expr1} ${expr2}` is illegal.",
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "description": "literal value",
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    {
+                      "description": "lazy expression to be evaluated",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "plot_type": {
+                "type": "string",
+                "description": "The type of the plot",
+                "enum": [
+                  "line",
+                  "bar",
+                  "pie",
+                  "scatter",
+                  "histogram"
+                ]
+              }
+            },
+            "required": [
+              "data",
+              "plot_type"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "variables"
+  ]
+}

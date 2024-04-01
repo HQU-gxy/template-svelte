@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "convert": "json2ts -i schemas/*.json -o src/types"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.0.2",
@@ -32,6 +33,7 @@
   "dependencies": {
     "bits-ui": "^0.21.1",
     "eslint-config-love": "^43.1.0",
+    "json-schema-to-typescript": "^13.1.2",
     "lodash": "^4.17.21"
   }
 }

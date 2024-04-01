@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "title": "TemplateReturn",
+  "description": "The evaluation result of a template.",
+  "type": "object",
+  "properties": {
+    "variables": {
+      "description": "The evaluated variables",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "name of the variable"
+          },
+          "value": {
+            "description": "the value of the variable"
+          }
+        },
+        "required": [
+          "name",
+          "value"
+        ]
+      }
+    },
+    "contents": {
+      "description": "The rendered contents",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "title": "HtmlContent",
+            "description": "HtmlContent will render a html tag with content and style",
+            "type": "object",
+            "properties": {
+              "tag": {
+                "description": "The tag to be rendered. Each tag will have a different style.",
+                "type": "string",
+                "enum": [
+                  "h1",
+                  "h2",
+                  "h3",
+                  "h4",
+                  "h5",
+                  "h6",
+                  "p",
+                  "em",
+                  "strong",
+                  "blockquote",
+                  "b",
+                  "i",
+                  "u"
+                ]
+              },
+              "content": {
+                "description": "the rendered content",
+                "type": "string"
+              },
+              "style": {
+                "title": "Style",
+                "type": "object",
+                "description": "The CSS style applied to this block. See also [CSS reference](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference)",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "tag",
+              "content"
+            ]
+          },
+          {
+            "title": "TableContent",
+            "description": "TableContent will render a table by columns",
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "description": "the evaluated data",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "table_type": {
+                "description": "must be `table`",
+                "type": "string",
+                "const": "table"
+              }
+            },
+            "required": [
+              "data",
+              "table_type"
+            ]
+          },
+          {
+            "title": "PlotContent",
+            "description": "PlotContent will render a plot with the data provided",
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "description": "the evaluated data",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "plot_type": {
+                "type": "string",
+                "description": "The type of the plot",
+                "enum": [
+                  "line",
+                  "bar",
+                  "pie",
+                  "scatter",
+                  "histogram"
+                ]
+              }
+            },
+            "required": [
+              "data",
+              "plot_type"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "variables",
+    "contents"
+  ]
+}
