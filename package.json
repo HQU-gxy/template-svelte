@@ -30,6 +30,7 @@
     "vite": "^5.1.6"
   },
   "dependencies": {
+    "bits-ui": "^0.21.1",
     "eslint-config-love": "^43.1.0",
     "lodash": "^4.17.21"
   }
