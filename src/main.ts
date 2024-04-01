@@ -1,4 +1,5 @@
-import "reset.css"
+import "./reset.css"
+import "./app.pcss"
 import App from './App.svelte'
 
 const app = new App({
