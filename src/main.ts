@@ -1,4 +1,3 @@
-import "./reset.css"
 import "./app.pcss"
 import App from './App.svelte'
 
