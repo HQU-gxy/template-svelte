@@ -22,16 +22,16 @@ $: is_content_collapsed = false
 $: selected = undefined as { value: Fruit; label?: string } | undefined
 </script>
 
-<main class="w-screen h-screen m-0 p-0">
-  <Resizable.PaneGroup direction="horizontal" class="rounded-lg border">
+<main class="w-screen h-screen p-0 m-0">
+  <Resizable.PaneGroup direction="horizontal" class="border rounded-lg">
     <Resizable.Pane defaultSize={38} minSize={25}>
-      <div class="flex h-full p-6 flex-col">
+      <div class="flex flex-col h-full p-6">
         <Card.Root>
-          <Card.Header class="flex flex-row justify-between items-center">
+          <Card.Header class="flex flex-row items-center justify-between">
             <Select.Root
               {selected}
               onSelectedChange={(s) => {
-                if (s) {
+                if (s !== undefined) {
                   selected = s
                 }
               }}
@@ -63,7 +63,7 @@ $: selected = undefined as { value: Fruit; label?: string } | undefined
           <Card.CardContent class="p-2">
             <Jar
               content={"lambda x:x+1"}
-              class="min-h-40 rounded-md p-2 shadow-inner overflow-auto bg-slate-100"
+              class="p-2 overflow-auto rounded-md shadow-inner min-h-40 bg-slate-100"
             />
           </Card.CardContent>
         </Card.Root>
@@ -86,7 +86,7 @@ $: selected = undefined as { value: Fruit; label?: string } | undefined
     >
       <div class={`flex h-full p-6 ${is_content_collapsed ? "hidden" : ""}`}>
         <span class="font-semibold"
-          >{`Selected fruit: ${selected ? selected.label : "None"}`}</span
+          >{`Selected fruit: ${selected !== undefined ? selected.label : "None"}`}</span
         >
       </div>
     </Resizable.Pane>
