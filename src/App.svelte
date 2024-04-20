@@ -1,72 +1,64 @@
+<svelte:options immutable={true} />
+
 <script lang="ts">
 import * as Resizable from "$lib/components/ui/resizable"
-import Jar from "$lib/components/jar/Jar.svelte"
-import * as Card from "$lib/components/ui/card"
-import { Button } from "$lib/components/ui/button/index"
-import Plus from "svelte-radix/Plus.svelte"
-import * as Select from "$lib/components/ui/select"
-import Delete from "svelte-material-icons/Delete.svelte"
+import ContentCard from "$lib/components/content_card/ContentCard.svelte"
+import { template_store } from "./lib/store/template"
+import { tick } from "svelte"
+import type { HtmlContent, PlotContent, TableContent } from "./types/template"
 
-const fruits = [
-  { value: "apple", label: "Apple" },
-  { value: "banana", label: "Banana" },
-  { value: "blueberry", label: "Blueberry" },
-  { value: "grapes", label: "Grapes" },
-  { value: "pineapple", label: "Pineapple" },
-] as const
+type Content = HtmlContent | PlotContent | TableContent
+let template = $template_store
+$: contents = template.contents ?? []
 
-type Fruit = (typeof fruits)[number]["value"]
+const onAdd = async () => {
+  const new_content = { tag: "p", content: "" } as HtmlContent
+  template_store.update((store) => {
+    if (store.contents === undefined) {
+      store.contents = [new_content]
+    }
+    store.contents = [...store.contents, new_content]
+    return store
+  })
+  contents = $template_store.contents ?? []
+}
+const onDelete = async (i: number) => {
+  template_store.update((store) => {
+    if (store.contents === undefined) {
+      store.contents = []
+    }
+    store.contents = store.contents.filter((_, j) => i !== j)
+    return store
+  })
+  contents = $template_store.contents ?? []
+}
 
-$: is_content_collapsed = false
-
-$: selected = undefined as { value: Fruit; label?: string } | undefined
+const setContent = async (i: number, content: Content) => {
+  console.log("setContent", i, content)
+  template_store.update((store) => {
+    if (store.contents === undefined) {
+      store.contents = []
+    }
+    store.contents[i] = content
+    return store
+  })
+  await tick()
+  contents = $template_store.contents ?? []
+}
 </script>
 
 <main class="w-screen h-screen p-0 m-0">
   <Resizable.PaneGroup direction="horizontal" class="border rounded-lg">
     <Resizable.Pane defaultSize={38} minSize={25}>
       <div class="flex flex-col h-full p-6">
-        <Card.Root>
-          <Card.Header class="flex flex-row items-center justify-between">
-            <Select.Root
-              {selected}
-              onSelectedChange={(s) => {
-                if (s !== undefined) {
-                  selected = s
-                }
-              }}
-            >
-              <Select.Trigger class="w-[180px]">
-                <Select.Value placeholder="Select a fruit" />
-              </Select.Trigger>
-              <Select.Content>
-                <Select.Group>
-                  <Select.Label>Fruits</Select.Label>
-                  {#each fruits as fruit}
-                    <Select.Item value={fruit.value} label={fruit.label}
-                      >{fruit.label}</Select.Item
-                    >
-                  {/each}
-                </Select.Group>
-              </Select.Content>
-            </Select.Root>
-
-            <div class="flex justify-even items-center [&>*]:ml-2">
-              <Button variant="outline" size="icon">
-                <Plus />
-              </Button>
-              <Button variant="outline" size="icon">
-                <Delete />
-              </Button>
-            </div>
-          </Card.Header>
-          <Card.CardContent class="p-2">
-            <Jar
-              content={"lambda x:x+1"}
-              class="p-2 overflow-auto rounded-md shadow-inner min-h-40 bg-slate-100"
-            />
-          </Card.CardContent>
-        </Card.Root>
+        {#each contents as content, i}
+          <ContentCard
+            {content}
+            onDelete={async () => await onDelete(i)}
+            {onAdd}
+            setContent={async (c) => await setContent(i, c)}
+          />
+        {/each}
       </div>
     </Resizable.Pane>
 
@@ -77,17 +69,13 @@ $: selected = undefined as { value: Fruit; label?: string } | undefined
       collapsedSize={10}
       onCollapse={() => {
         console.info("Collapsed")
-        is_content_collapsed = true
       }}
       onExpand={() => {
         console.info("Expanded")
-        is_content_collapsed = false
       }}
     >
-      <div class={`flex h-full p-6 ${is_content_collapsed ? "hidden" : ""}`}>
-        <span class="font-semibold"
-          >{`Selected fruit: ${selected !== undefined ? selected.label : "None"}`}</span
-        >
+      <div class={`flex h-full p-6`}>
+        <span class="font-semibold"> Hello world </span>
       </div>
     </Resizable.Pane>
   </Resizable.PaneGroup>
