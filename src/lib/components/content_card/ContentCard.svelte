@@ -1,30 +1,63 @@
-<svelte:options immutable={false} runes={true} />
+<svelte:options runes={true} />
 
 <script lang="ts">
 import Jar from "$lib/components/jar/Jar.svelte"
 import * as Card from "$lib/components/ui/card"
 import { Button } from "$lib/components/ui/button/index"
 import Plus from "svelte-radix/Plus.svelte"
+import { ArrowUp, ArrowDown } from "lucide-svelte"
 import * as Select from "$lib/components/ui/select"
 import Delete from "svelte-material-icons/Delete.svelte"
 import ColumnDataEntries from "./ColumnDataEntries.svelte"
 import type { HtmlContent, PlotContent, TableContent } from "src/types/template"
 import { isNullish, type Nullish } from "utility-types"
-import { get } from "svelte/store"
-import { tick } from "svelte"
 
 type Content = HtmlContent | PlotContent | TableContent
-type OnDelete = () => Promise<void>
-type OnAdd = () => Promise<void>
+// async or sync function that returns void
+type VoidFn = (() => void) | (() => Promise<void>)
+type Entries = TableContent["data"] | PlotContent["data"]
+type PlotType = PlotContent["plot_type"]
+
+const unifyCall = (fn: VoidFn | Nullish) => {
+  if (isNullish(fn)) {
+    return
+  }
+
+  const r = fn()
+  if (r instanceof Promise) {
+    r.catch(console.error)
+  }
+}
 
 interface Props {
   content: Content
-  onDelete: OnDelete | Nullish
-  onAdd: OnAdd | Nullish
+  onDelete: VoidFn | Nullish
+  onAdd: VoidFn | Nullish
+  onUp: VoidFn | Nullish
+  onDown: VoidFn | Nullish
+  class?: string
 }
 
-// https://www.reddit.com/r/sveltejs/comments/e9zqn1/why_use_custom_events/
-const { content = $bindable(), onDelete = null, onAdd = null }: Props = $props()
+let {
+  content = $bindable(),
+  onDelete = null,
+  onAdd = null,
+  onUp = null,
+  onDown = null,
+  class: className,
+}: Props = $props()
+
+enum ContentType {
+  HTML = "Text",
+  PLOT = "Plot",
+  TABLE = "Table",
+}
+
+const ContentTypeList = [
+  ContentType.HTML,
+  ContentType.PLOT,
+  ContentType.TABLE,
+] as const
 
 const htmlContent = $derived(
   "content" in content && "tag" in content
@@ -44,32 +77,155 @@ const tableContent = $derived(
     : undefined,
 )
 
+const plotType = $derived(
+  "plot_type" in content ? (content.plot_type as PlotType) : undefined,
+)
+const PlotTypeList: PlotType[] = ["line", "bar", "scatter"] as const
+const selectedPlotType = $derived({
+  value: plotType,
+  label: (() => {
+    if (isNullish(plotType)) {
+      return plotType
+    }
+    return plotType.charAt(0).toUpperCase() + plotType.slice(1)
+  })(),
+})
+const setPlotType = (newType: PlotType) => {
+  if (!isNullish(plotContent)) {
+    plotContent.plot_type = newType
+  }
+}
+
+const data = $derived("data" in content ? (content.data as Entries) : undefined)
+
+const deduceContentType = (content: Content): ContentType => {
+  if ("tag" in content) {
+    return ContentType.HTML
+  } else if ("plot_type" in content) {
+    return ContentType.PLOT
+  } else if ("table_type" in content) {
+    return ContentType.TABLE
+  }
+  return ContentType.HTML
+}
+
+const defaultHtmlContent: HtmlContent = { tag: "p", content: "" }
+const defaultPlotContent: PlotContent = {
+  data: {
+    col_1: [1, 2, 3],
+  },
+  plot_type: "line",
+}
+const defaultTableContent: TableContent = {
+  data: {
+    col_1: [1, 2, 3],
+  },
+  table_type: "table",
+}
+
+const selected = $derived(deduceContentType(content))
+// https://github.com/huntabyte/shadcn-svelte/issues/361
+const selectedType = $derived({
+  value: selected,
+  label: selected,
+})
+
+const changeContentType = (newType: ContentType) => {
+  if (selected === newType) {
+    return
+  }
+  switch (newType) {
+    case ContentType.HTML:
+      content = defaultHtmlContent
+      break
+    case ContentType.PLOT:
+      if (!isNullish(data)) {
+        content = {
+          data,
+          plot_type: "line",
+        }
+      } else {
+        content = defaultPlotContent
+      }
+      break
+    case ContentType.TABLE:
+      if (!isNullish(data)) {
+        content = {
+          data,
+          table_type: "table",
+        }
+      } else {
+        content = defaultTableContent
+      }
+      break
+  }
+}
 </script>
 
-<Card.Root>
-  <Card.Header class="flex flex-row items-center justify-between">
-    <div class="flex justify-even items-center [&>*]:ml-2">
-      {#if onAdd !== undefined}
+<Card.Root class={className}>
+  <Card.Header
+    class="flex flex-row items-center justify-between p-2 first:pb-0"
+  >
+    <Select.Root selected={selectedType}>
+      <Select.Trigger class="w-[120px]">
+        <Select.Value placeholder="Select type" />
+      </Select.Trigger>
+      <Select.Content>
+        <Select.Group>
+          <Select.Label>Types</Select.Label>
+          {#each ContentTypeList as t}
+            <Select.Item
+              value={t}
+              label={t}
+              onclick={() => {
+                changeContentType(t)
+              }}
+            />
+          {/each}
+        </Select.Group>
+      </Select.Content>
+    </Select.Root>
+    <div class="flex items-center space-x-2">
+      {#if !isNullish(onUp)}
         <Button
           variant="outline"
           size="icon"
-          on:click={async () => {
-            if (!isNullish(onAdd)) {
-              await onAdd()
-            }
+          on:click={() => {
+            unifyCall(onUp)
+          }}
+        >
+          <ArrowUp />
+        </Button>
+      {/if}
+      {#if !isNullish(onDown)}
+        <Button
+          variant="outline"
+          size="icon"
+          on:click={() => {
+            unifyCall(onDown)
+          }}
+        >
+          <ArrowDown />
+        </Button>
+      {/if}
+
+      {#if !isNullish(onAdd)}
+        <Button
+          variant="outline"
+          size="icon"
+          on:click={() => {
+            unifyCall(onAdd)
           }}
         >
           <Plus />
         </Button>
       {/if}
-      {#if onDelete !== undefined}
+      {#if !isNullish(onDelete)}
         <Button
           variant="outline"
           size="icon"
           on:click={() => {
-            if (!isNullish(onDelete)) {
-              onDelete().catch(console.error)
-            }
+            unifyCall(onDelete)
           }}
         >
           <Delete />
@@ -86,11 +242,32 @@ const tableContent = $derived(
             htmlContent.content = content
           }
         }}
-        class="p-2 overflow-auto rounded-md shadow-inner min-h-40 bg-slate-100"
+        class="code-input min-h-40"
       />
     {/if}
 
     {#if plotContent}
+      {#if !isNullish(plotType)}
+        <Select.Root selected={selectedPlotType}>
+          <Select.Trigger class="w-[120px]">
+            <Select.Value placeholder="Select plot type" />
+          </Select.Trigger>
+          <Select.Content>
+            <Select.Group>
+              <Select.Label>Plot Types</Select.Label>
+              {#each PlotTypeList as t}
+                <Select.Item
+                  value={t}
+                  label={t.charAt(0).toUpperCase() + t.slice(1)}
+                  onclick={() => {
+                    setPlotType(t)
+                  }}
+                />
+              {/each}
+            </Select.Group>
+          </Select.Content>
+        </Select.Root>
+      {/if}
       <ColumnDataEntries bind:entries={plotContent.data} />
     {/if}
 

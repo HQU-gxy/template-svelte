@@ -76,3 +76,28 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .font-editor{
+    /* https://gist.github.com/alex1504/112b462fbc08722a33a8915254410e22 */
+    font-family:
+      ui-monospace,
+      SFMono-Regular,
+      SF Mono,
+      Menlo,
+      Consolas,
+      Liberation Mono monospace,
+      "Helvetica Neue",
+      Helvetica,
+      Arial,
+      "Microsoft Yahei",
+      "Hiragino Sans GB",
+      "Heiti SC",
+      "WenQuanYi Micro Hei",
+      sans-serif;
+  }
+
+  .code-input {
+    @apply p-2 overflow-auto font-sans text-sm rounded-md shadow-inner bg-slate-100 font-editor;
+  }
+}
