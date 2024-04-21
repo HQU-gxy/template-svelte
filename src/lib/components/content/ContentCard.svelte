@@ -14,9 +14,9 @@ import type {
   PlotContent,
   TableContent,
 } from "$lib/types/template"
+import type { Content } from "$lib/types/derived"
 import { isNullish, type Nullish } from "utility-types"
 
-type Content = HtmlContent | PlotContent | TableContent
 /**
  * @summary a function that does not return anything, either synchronously or asynchronously
  */

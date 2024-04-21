@@ -5,16 +5,16 @@ import * as Resizable from "$lib/components/ui/resizable"
 import ContentCard from "$lib/components/content/ContentCard.svelte"
 import { default_template } from "$lib/template/template"
 import type { HtmlContent, PlotContent, TableContent } from "./lib/types/template"
+import type { Content } from "$lib/types/derived"
 
 import json from "highlight.js/lib/languages/python"
 import Highlighted from "$lib/components/jar/Highlighted.svelte"
 import "highlight.js/styles/github.css"
+import VariableTables from "$lib/components/variables/VariableTables.svelte"
 
-type Content = HtmlContent | PlotContent | TableContent
 const template = $state(default_template)
 const contents = $derived(template.contents)
-const variables = $derived(template.variables)
-const contents_string = $derived(JSON.stringify(contents, null, 2))
+const template_string = $derived(JSON.stringify(template, null, 2))
 
 const handleAdd = (i: number) => {
   const new_content: HtmlContent = { tag: "p", content: "" }
@@ -71,18 +71,13 @@ const handleDown = (i: number) => {
       <Resizable.PaneGroup direction="vertical" class="border rounded-lg">
       <Resizable.Pane defaultSize={75} collapsible={true} collapsedSize={10}>
         <div class="h-full p-6 overflow-y-auto">
-          <Highlighted content={contents_string} language="json" languageFn={json} class="font-editor" />
+          <Highlighted content={template_string} language="json" languageFn={json} class="font-editor" />
         </div>
       </Resizable.Pane>
     <Resizable.Handle withHandle />
       <!-- variable stuff -->
       <Resizable.Pane defaultSize={25} collapsible={true} collapsedSize={10}>
-          <div class="p-6 overflow-y-auto">
-            {#each variables as variable}
-              <div class="font-bold">{variable.name}</div>
-              <div>{variable.expr}</div>
-            {/each}
-          </div>
+        <VariableTables bind:variables={template.variables} class="h-full p-6" />
       </Resizable.Pane>
       </Resizable.PaneGroup>
     </Resizable.Pane>

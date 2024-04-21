@@ -49,7 +49,8 @@ module.exports = {
                 "no-template-curly-in-string": "warn",
                 "@typescript-eslint/promise-function-async": "off",
                 "@typescript-eslint/no-non-null-assertion": "warn",
-                "no-tabs": ["error", { allowIndentationTabs: true }]
+                "no-tabs": ["error", { allowIndentationTabs: true }],
+                "no-useless-return": "off",
             }
         }
     ]
