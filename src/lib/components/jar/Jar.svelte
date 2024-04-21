@@ -1,11 +1,10 @@
 <script lang="ts">
 import { CodeJar } from "codejar"
-import { onMount } from "svelte"
+import { onMount, tick } from "svelte"
 import hljs from "highlight.js"
 import { cn } from "$lib/utils.js"
 import python from "highlight.js/lib/languages/python"
 import "highlight.js/styles/github.css"
-import { tick } from "svelte"
 // https://unpkg.com/browse/highlightjs@9.16.2/styles/
 
 let CodeElement: HTMLElement

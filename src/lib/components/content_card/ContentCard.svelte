@@ -8,34 +8,32 @@ import Plus from "svelte-radix/Plus.svelte"
 import * as Select from "$lib/components/ui/select"
 import Delete from "svelte-material-icons/Delete.svelte"
 import ColumnDataEntries from "./ColumnDataEntries.svelte"
-import { get } from "svelte/store"
 import type { HtmlContent, PlotContent, TableContent } from "src/types/template"
-import { template_store } from "$lib/store/template"
 import { isNullish } from "utility-types"
+import { get } from "svelte/store"
 import { tick } from "svelte"
 
 type Content = HtmlContent | PlotContent | TableContent
-type ColumnContent = PlotContent | TableContent
 
 // https://www.reddit.com/r/sveltejs/comments/e9zqn1/why_use_custom_events/
 export let content: Content
 export let onDelete: (() => Promise<void>) | null = null
 export let onAdd: (() => Promise<void>) | null = null
-export let onUpdate: (content: Content) => Promise<void>
 
-const htmlContent: HtmlContent | undefined =
+// https://hygraph.com/blog/data-binding-in-svelte
+// https://svelte.dev/blog/runes#runtime-reactivity
+$: htmlContent =
   "content" in content && "tag" in content
     ? (content as HtmlContent)
     : undefined
-const plotContent: PlotContent | undefined =
+$: plotContent =
   "data" in content && "plot_type" in content
     ? (content as PlotContent)
     : undefined
-const tableContent: TableContent | undefined =
+$: tableContent =
   "data" in content && "table_type" in content
     ? (content as TableContent)
     : undefined
-// https://hygraph.com/blog/data-binding-in-svelte
 
 const fruits = [
   { value: "apple", label: "Apple" },
@@ -48,15 +46,6 @@ const fruits = [
 type Fruit = (typeof fruits)[number]["value"]
 
 $: selected = undefined as { value: Fruit; label?: string } | undefined
-
-$: {
-  if (!isNullish(onUpdate)) {
-    ;(async () => {
-      // await tick()
-      await onUpdate(content)
-    })().catch(console.error)
-  }
-}
 </script>
 
 <Card.Root>
@@ -114,11 +103,13 @@ $: {
     </div>
   </Card.Header>
   <Card.CardContent class="p-2">
-    {#if htmlContent}
+    {#if !isNullish(htmlContent)}
       <Jar
         content={htmlContent.content}
         onContentChange={(content) => {
-          htmlContent.content = content
+          if (!isNullish(htmlContent)) {
+            htmlContent.content = content
+          }
         }}
         class="p-2 overflow-auto rounded-md shadow-inner min-h-40 bg-slate-100"
       />
