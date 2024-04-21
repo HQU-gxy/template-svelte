@@ -6,7 +6,7 @@ import { Button } from "$lib/components/ui/button/index"
 import Delete from "svelte-material-icons/Delete.svelte"
 import { Input } from "$lib/components/ui/input"
 import { Label } from "$lib/components/ui/label"
-import type { HtmlContent, PlotContent, TableContent } from "src/types/template"
+import type { HtmlContent, PlotContent, TableContent } from "$lib/types/template"
 import NumberArrayInput from "./NumberArrayInput.svelte"
 
 type TableEntries = TableContent["data"]

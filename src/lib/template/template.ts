@@ -1,5 +1,4 @@
-import type { Template } from "src/types/template"
-import { writable } from "@crikey/stores-immer"
+import type { Template } from "$lib/types/template"
 
 const default_template: Template = {
   imports: ["import numpy as np", "from datetime import datetime", "import builtins"],
@@ -61,6 +60,4 @@ const default_template: Template = {
   ],
 } as const
 
-const template_store = writable<Template>(default_template)
-
-export { template_store, default_template }
+export { default_template }

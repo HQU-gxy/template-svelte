@@ -9,15 +9,24 @@ import { ArrowUp, ArrowDown } from "lucide-svelte"
 import * as Select from "$lib/components/ui/select"
 import Delete from "svelte-material-icons/Delete.svelte"
 import ColumnDataEntries from "./ColumnDataEntries.svelte"
-import type { HtmlContent, PlotContent, TableContent } from "src/types/template"
+import type {
+  HtmlContent,
+  PlotContent,
+  TableContent,
+} from "$lib/types/template"
 import { isNullish, type Nullish } from "utility-types"
 
 type Content = HtmlContent | PlotContent | TableContent
-// async or sync function that returns void
+/**
+ * @summary a function that does not return anything, either synchronously or asynchronously
+ */
 type VoidFn = (() => void) | (() => Promise<void>)
 type Entries = TableContent["data"] | PlotContent["data"]
 type PlotType = PlotContent["plot_type"]
 
+/**
+ * @summary unify call to a void function or do nothing on a nullish value
+ */
 const unifyCall = (fn: VoidFn | Nullish) => {
   if (isNullish(fn)) {
     return
@@ -47,18 +56,6 @@ let {
   class: className,
 }: Props = $props()
 
-enum ContentType {
-  HTML = "Text",
-  PLOT = "Plot",
-  TABLE = "Table",
-}
-
-const ContentTypeList = [
-  ContentType.HTML,
-  ContentType.PLOT,
-  ContentType.TABLE,
-] as const
-
 const htmlContent = $derived(
   "content" in content && "tag" in content
     ? (content as HtmlContent)
@@ -77,17 +74,46 @@ const tableContent = $derived(
     : undefined,
 )
 
+const data = $derived("data" in content ? (content.data as Entries) : undefined)
+
+/** tag type */
+type TagType = HtmlContent["tag"]
+const tagTypeList: TagType[] = [
+  "p",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "blockquote",
+] as const
+const tagType = $derived("tag" in content ? (content.tag as string) : undefined)
+const selectedTagType = $derived({
+  value: tagType,
+  label: tagType,
+})
+const setTagType = (newType: TagType) => {
+  if (!isNullish(htmlContent)) {
+    htmlContent.tag = newType
+  }
+}
+
+/** plot type */
 const plotType = $derived(
   "plot_type" in content ? (content.plot_type as PlotType) : undefined,
 )
-const PlotTypeList: PlotType[] = ["line", "bar", "scatter"] as const
+const plotTypeList: PlotType[] = ["line", "bar", "scatter"] as const
+const makeFirstLetterUpperCase = (s: string) => {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
 const selectedPlotType = $derived({
   value: plotType,
   label: (() => {
     if (isNullish(plotType)) {
       return plotType
     }
-    return plotType.charAt(0).toUpperCase() + plotType.slice(1)
+    return makeFirstLetterUpperCase(plotType)
   })(),
 })
 const setPlotType = (newType: PlotType) => {
@@ -96,7 +122,18 @@ const setPlotType = (newType: PlotType) => {
   }
 }
 
-const data = $derived("data" in content ? (content.data as Entries) : undefined)
+/** content type */
+enum ContentType {
+  HTML = "Text",
+  PLOT = "Plot",
+  TABLE = "Table",
+}
+
+const contentTypeList = [
+  ContentType.HTML,
+  ContentType.PLOT,
+  ContentType.TABLE,
+] as const
 
 const deduceContentType = (content: Content): ContentType => {
   if ("tag" in content) {
@@ -173,7 +210,7 @@ const changeContentType = (newType: ContentType) => {
       <Select.Content>
         <Select.Group>
           <Select.Label>Types</Select.Label>
-          {#each ContentTypeList as t}
+          {#each contentTypeList as t}
             <Select.Item
               value={t}
               label={t}
@@ -235,6 +272,28 @@ const changeContentType = (newType: ContentType) => {
   </Card.Header>
   <Card.CardContent class="p-2">
     {#if !isNullish(htmlContent)}
+      {#if !isNullish(tagType)}
+        <Select.Root selected={selectedTagType}>
+          <Select.Trigger class="w-[120px]">
+            <Select.Value placeholder="Select tag" />
+          </Select.Trigger>
+          <Select.Content>
+            <Select.Group>
+              <Select.Label>Types</Select.Label>
+              {#each tagTypeList as t}
+                <Select.Item
+                  value={t}
+                  label={t}
+                  onclick={() => {
+                    setTagType(t)
+                  }}
+                />
+              {/each}
+            </Select.Group>
+          </Select.Content>
+        </Select.Root>
+      {/if}
+
       <Jar
         content={htmlContent.content}
         onContentChange={(content) => {
@@ -242,7 +301,7 @@ const changeContentType = (newType: ContentType) => {
             htmlContent.content = content
           }
         }}
-        class="code-input min-h-40"
+        class="mt-2 code-input min-h-40"
       />
     {/if}
 
@@ -255,7 +314,7 @@ const changeContentType = (newType: ContentType) => {
           <Select.Content>
             <Select.Group>
               <Select.Label>Plot Types</Select.Label>
-              {#each PlotTypeList as t}
+              {#each plotTypeList as t}
                 <Select.Item
                   value={t}
                   label={t.charAt(0).toUpperCase() + t.slice(1)}

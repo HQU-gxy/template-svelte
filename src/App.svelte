@@ -2,17 +2,18 @@
 
 <script lang="ts">
 import * as Resizable from "$lib/components/ui/resizable"
-import ContentCard from "$lib/components/content_card/ContentCard.svelte"
-import { default_template } from "$lib/store/template"
+import ContentCard from "$lib/components/content/ContentCard.svelte"
+import { default_template } from "$lib/template/template"
+import type { HtmlContent, PlotContent, TableContent } from "./lib/types/template"
 
 import json from "highlight.js/lib/languages/python"
-import "highlight.js/styles/github.css"
-import type { HtmlContent, PlotContent, TableContent } from "./types/template"
 import Highlighted from "$lib/components/jar/Highlighted.svelte"
+import "highlight.js/styles/github.css"
 
 type Content = HtmlContent | PlotContent | TableContent
 const template = $state(default_template)
 const contents = $derived(template.contents)
+const variables = $derived(template.variables)
 const contents_string = $derived(JSON.stringify(contents, null, 2))
 
 const handleAdd = (i: number) => {
@@ -49,7 +50,8 @@ const handleDown = (i: number) => {
 <main class="w-screen h-screen p-0 m-0">
   <Resizable.PaneGroup direction="horizontal" class="border rounded-lg">
     <Resizable.Pane defaultSize={38} minSize={25}>
-      <div class="flex flex-col h-full p-6 space-y-4">
+      <!-- content bar -->
+      <div class="flex flex-col h-full p-6 space-y-4 overflow-y-auto">
         {#each contents as _, i}
           <ContentCard
             bind:content={template.contents[i] as Content}
@@ -63,11 +65,28 @@ const handleDown = (i: number) => {
     </Resizable.Pane>
 
     <Resizable.Handle withHandle />
+
     <Resizable.Pane defaultSize={75} collapsible={true} collapsedSize={10}>
-      <div class={"h-full p-6"}>
-        <Highlighted content={contents_string} language="json" languageFn={json} class="font-editor" />
-      </div>
+      <!-- display (source code & render result) -->
+      <Resizable.PaneGroup direction="vertical" class="border rounded-lg">
+      <Resizable.Pane defaultSize={75} collapsible={true} collapsedSize={10}>
+        <div class="h-full p-6 overflow-y-auto">
+          <Highlighted content={contents_string} language="json" languageFn={json} class="font-editor" />
+        </div>
+      </Resizable.Pane>
+    <Resizable.Handle withHandle />
+      <!-- variable stuff -->
+      <Resizable.Pane defaultSize={25} collapsible={true} collapsedSize={10}>
+          <div class="p-6 overflow-y-auto">
+            {#each variables as variable}
+              <div class="font-bold">{variable.name}</div>
+              <div>{variable.expr}</div>
+            {/each}
+          </div>
+      </Resizable.Pane>
+      </Resizable.PaneGroup>
     </Resizable.Pane>
+
   </Resizable.PaneGroup>
 </main>
 

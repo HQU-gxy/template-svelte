@@ -8,7 +8,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-check --tsconfig ./tsconfig.json",
-		"convert": "json2ts -i schemas/*.json -o src/types"
+		"convert": "json2ts -i schemas/*.json -o src/lib/types"
 	},
 	"engines": {
 		"pnpm": ">=8",
