@@ -22,11 +22,11 @@ export interface Template {
    *
    * `from <module> import *` is not allowed.
    */
-  imports?: string[];
+  imports: string[];
   /**
    * Data sources that can be used by `PathVariable` in the variables section
    */
-  data_sources?: (DictSource | FileSource | APISource)[];
+  data_sources: (DictSource | FileSource | APISource)[];
   /**
    * Variables that can be used/evaluated in the `contents` section
    */
@@ -34,7 +34,7 @@ export interface Template {
   /**
    * content of the template by the order they should be rendered.
    */
-  contents?: (HtmlContent | TableContent | PlotContent)[];
+  contents: (HtmlContent | TableContent | PlotContent)[];
   [k: string]: unknown;
 }
 /**

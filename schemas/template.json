@@ -371,6 +371,9 @@
     }
   },
   "required": [
-    "variables"
+    "variables",
+    "contents",
+    "imports",
+    "data_sources"
   ]
 }

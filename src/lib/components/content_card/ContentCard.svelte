@@ -7,19 +7,20 @@ import { Button } from "$lib/components/ui/button/index"
 import Plus from "svelte-radix/Plus.svelte"
 import * as Select from "$lib/components/ui/select"
 import Delete from "svelte-material-icons/Delete.svelte"
-import { tick } from "svelte"
+import ColumnDataEntries from "./ColumnDataEntries.svelte"
 import { get } from "svelte/store"
 import type { HtmlContent, PlotContent, TableContent } from "src/types/template"
 import { template_store } from "$lib/store/template"
+import { isNullish } from "utility-types"
+import { tick } from "svelte"
 
 type Content = HtmlContent | PlotContent | TableContent
 type ColumnContent = PlotContent | TableContent
 
-export let content: Content
-export let setContent: (content: Content) => Promise<void>
 // https://www.reddit.com/r/sveltejs/comments/e9zqn1/why_use_custom_events/
-export let onDelete: (() => Promise<void>) | undefined = undefined
-export let onAdd: (() => Promise<void>) | undefined = undefined
+export let content: Content
+export let onDelete: (() => Promise<void>) | null = null
+export let onAdd: (() => Promise<void>) | null = null
 
 const htmlContent: HtmlContent | undefined =
   "content" in content && "tag" in content
@@ -78,7 +79,11 @@ $: selected = undefined as { value: Fruit; label?: string } | undefined
         <Button
           variant="outline"
           size="icon"
-          on:click={() => (onAdd !== undefined ? onAdd() : undefined)}
+          on:click={async () => {
+            if (!isNullish(onAdd)) {
+              await onAdd()
+            }
+          }}
         >
           <Plus />
         </Button>
@@ -87,7 +92,11 @@ $: selected = undefined as { value: Fruit; label?: string } | undefined
         <Button
           variant="outline"
           size="icon"
-          on:click={() => (onDelete !== undefined ? onDelete() : undefined)}
+          on:click={async () => {
+            if (!isNullish(onDelete)) {
+              await onDelete()
+            }
+          }}
         >
           <Delete />
         </Button>
@@ -99,96 +108,18 @@ $: selected = undefined as { value: Fruit; label?: string } | undefined
       <Jar
         content={htmlContent.content}
         onContentChange={(content) => {
-          setContent({ ...htmlContent, content })
+          htmlContent.content = content
         }}
         class="p-2 overflow-auto rounded-md shadow-inner min-h-40 bg-slate-100"
       />
     {/if}
 
     {#if plotContent}
-      {#each Object.entries(plotContent.data) as [k, v]}
-        <Jar
-          content={k}
-          class="p-2 overflow-auto rounded-md shadow-inner min-h-40 bg-slate-100"
-        />
-      {/each}
+      <ColumnDataEntries bind:entries={plotContent.data} />
     {/if}
 
     {#if tableContent}
-      {#each Object.entries(tableContent.data) as [k, v]}
-        <div>
-          {#if v instanceof Array}
-            <div>
-              <span class="p-2">
-                {k}
-              </span>
-              {#each v as number, i}
-                <div class="flex justify-between pl-4 mt-2">
-                  <input
-                    class="flex-grow mr-4"
-                    value={number}
-                    on:input={// https://stackoverflow.com/questions/62278480/add-onchange-handler-to-input-in-svelte
-                    (e) => {
-                      const target = e.target
-                      if (target instanceof HTMLInputElement) {
-                        const val = target.value
-                        const parsed = parseFloat(val)
-                        setContent({
-                          ...tableContent,
-                          data: {
-                            ...tableContent.data,
-                            // @ts-expect-error it will be an array
-                            [k]: tableContent.data[k].map((_, j) =>
-                              j === i ? (isNaN(parsed) ? val : parsed) : _,
-                            ),
-                          },
-                        })
-                      }
-                    }}
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    on:click={() => {
-                      setContent({
-                        ...tableContent,
-                        data: {
-                          ...tableContent.data,
-                          // @ts-expect-error it will be an array
-                          [k]: tableContent.data[k].filter((_, j) => j !== i),
-                        },
-                      })
-                    }}
-                  >
-                    <Delete />
-                  </Button>
-                </div>
-              {/each}
-            </div>
-          {:else if typeof v === "string"}
-            <div class="flex justify-between">
-              <span class="p-2">
-                {k}
-              </span>
-              <Jar
-                content={v}
-                onContentChange={(content) => {
-                  setContent({
-                    ...tableContent,
-                    data: { ...tableContent.data, [k]: content },
-                  })
-                }}
-                class="flex-grow p-2 overflow-auto rounded-md shadow-inner bg-slate-100"
-              />
-            </div>
-          {/if}
-        </div>
-      {/each}
+      <ColumnDataEntries bind:entries={tableContent.data} />
     {/if}
-    <button
-      on:click={() => {
-        console.log(get(template_store).contents)
-      }}>display status</button
-    >
   </Card.CardContent>
 </Card.Root>

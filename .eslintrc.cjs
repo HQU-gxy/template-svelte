@@ -10,10 +10,6 @@ module.exports = {
     overrides: [
         // https://typescript-eslint.io/troubleshooting/#i-get-errors-telling-me-eslint-was-configured-to-run--however-that-tsconfig-does-not--none-of-those-tsconfigs-include-this-file
         {
-            files: ['**/*.js'],
-            extends: [tseslint.configs.disableTypeChecked],
-        },
-        {
             files: ["*.svelte"],
             parser: 'svelte-eslint-parser',
             parserOptions: {
@@ -32,6 +28,11 @@ module.exports = {
                 ],
                 "@typescript-eslint/quotes": ["error", "double"],
                 "@typescript-eslint/comma-dangle": "off",
+                "@typescript-eslint/no-unused-vars": "warn",
+                "@typescript-eslint/ban-ts-comment": "off",
+                "@typescript-eslint/member-delimiter-style": "off",
+                "@typescript-eslint/explicit-function-return-type": "off",
+                "no-template-curly-in-string": "warn",
             }
         }
     ]
