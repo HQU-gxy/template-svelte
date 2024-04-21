@@ -21,6 +21,7 @@ type ColumnContent = PlotContent | TableContent
 export let content: Content
 export let onDelete: (() => Promise<void>) | null = null
 export let onAdd: (() => Promise<void>) | null = null
+export let onUpdate: (content: Content) => Promise<void>
 
 const htmlContent: HtmlContent | undefined =
   "content" in content && "tag" in content
@@ -47,6 +48,15 @@ const fruits = [
 type Fruit = (typeof fruits)[number]["value"]
 
 $: selected = undefined as { value: Fruit; label?: string } | undefined
+
+$: {
+  if (!isNullish(onUpdate)) {
+    ;(async () => {
+      // await tick()
+      await onUpdate(content)
+    })().catch(console.error)
+  }
+}
 </script>
 
 <Card.Root>
@@ -92,9 +102,9 @@ $: selected = undefined as { value: Fruit; label?: string } | undefined
         <Button
           variant="outline"
           size="icon"
-          on:click={async () => {
+          on:click={() => {
             if (!isNullish(onDelete)) {
-              await onDelete()
+              onDelete().catch(console.error)
             }
           }}
         >

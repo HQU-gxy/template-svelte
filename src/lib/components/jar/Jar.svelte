@@ -22,15 +22,17 @@ export { className as class, content, onContentChange }
 onMount(() => {
   const language = "python"
   hljs.registerLanguage(language, python)
-  CodeElement.innerHTML = hljs.highlight(language, content).value
+  CodeElement.innerHTML = hljs.highlight(content, { language }).value
   editor = CodeJar(CodeElement, (el) => {
     ;(async function () {
-      let code = el.textContent
+      const code = el.textContent
       content = code ?? ""
       onContentChange(content)
-      el.innerHTML = hljs.highlight(language, code ?? "").value
+      el.innerHTML = hljs.highlight(content, { language }).value
       await tick()
     })()
+      .then()
+      .catch(console.error)
   })
 })
 </script>

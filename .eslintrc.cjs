@@ -33,6 +33,7 @@ module.exports = {
                 "@typescript-eslint/member-delimiter-style": "off",
                 "@typescript-eslint/explicit-function-return-type": "off",
                 "no-template-curly-in-string": "warn",
+                "@typescript-eslint/promise-function-async":"off",
             }
         }
     ]

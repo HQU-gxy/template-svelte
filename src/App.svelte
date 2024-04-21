@@ -3,24 +3,41 @@
 <script lang="ts">
 import * as Resizable from "$lib/components/ui/resizable"
 import ContentCard from "$lib/components/content_card/ContentCard.svelte"
-import { default_template, template_store } from "./lib/store/template"
+import { template_store } from "./lib/store/template"
 import { tick } from "svelte"
 import { get } from "svelte/store"
+import { curry, always as constantly, partial } from "ramda"
 import type { HtmlContent, PlotContent, TableContent } from "./types/template"
 
 type Content = HtmlContent | PlotContent | TableContent
 // https://svelte.dev/repl/1afe59d2c99d4919a34985e34c5913ba?version=3.35.0
 $: contents = $template_store.contents
+$: contents_string = JSON.stringify(contents, null, 2)
 
-const onAdd = async (i: number) => {
+const _onAdd = async (i: number) => {
   const new_content: HtmlContent = { tag: "p", content: "" }
-  contents = [...contents.slice(0, i + 1), new_content, ...contents.slice(i + 1)]
+  console.info("Adding new content")
+  const s_start = [...contents.slice(0, i + 1)]
+  const s_end = [...contents.slice(i + 1)]
+  contents = [...s_start, new_content, ...s_end]
   $template_store.contents = contents
 }
-const onDelete = async (i: number) => {
+const onAdd = _onAdd
+
+const _onDelete = async (i: number) => {
+  console.info("Deleting content")
   contents = contents.filter((_, j) => i !== j)
   $template_store.contents = contents
 }
+const onDelete = _onDelete
+
+const _onUpdate = async (i: number, content: Content) => {
+  await tick()
+  contents[i] = content
+  $template_store.contents = [...contents]
+  contents = [...contents]
+}
+const onUpdate = curry(_onUpdate)
 // https://github.com/sveltejs/svelte/issues/3455
 </script>
 
@@ -30,32 +47,22 @@ const onDelete = async (i: number) => {
       <div class="flex flex-col h-full p-6">
         {#each contents as content, i}
           <ContentCard
-            bind:content={content}
-            onDelete={async () => {
-              await onDelete(i)
-            }}
-            onAdd={async () => {
-              await onAdd(i)
-            }}
+            {content}
+            onUpdate={onUpdate(i)}
+            onDelete={() => onDelete(i)}
+            onAdd={() => onAdd(i)}
           />
         {/each}
       </div>
     </Resizable.Pane>
 
     <Resizable.Handle withHandle />
-    <Resizable.Pane
-      defaultSize={75}
-      collapsible={true}
-      collapsedSize={10}
-      onCollapse={() => {
-        console.info("Collapsed")
-      }}
-      onExpand={() => {
-        console.info("Expanded")
-      }}
-    >
+    <Resizable.Pane defaultSize={75} collapsible={true} collapsedSize={10}>
       <div class={"flex h-full p-6"}>
         <span class="font-semibold"> Hello world </span>
+        <div>
+        {contents_string}
+        </div>
         <button
           on:click={() => {
             console.info(get(template_store).contents)
