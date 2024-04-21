@@ -1,6 +1,8 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
 import { CodeJar } from "codejar"
-import { onMount, tick } from "svelte"
+import { tick } from "svelte"
 import hljs from "highlight.js"
 import { cn } from "$lib/utils.js"
 import python from "highlight.js/lib/languages/python"
@@ -8,17 +10,22 @@ import "highlight.js/styles/github.css"
 // https://unpkg.com/browse/highlightjs@9.16.2/styles/
 
 let CodeElement: HTMLElement
-let editor: CodeJar | null = null
+let editor: CodeJar | null = $state(null)
 
-let content = ""
-let className = ""
+interface Props {
+  content: string
+  class: string
+  onContentChange: (content: string) => void
+}
 
-let onContentChange: (content: string) => void = () => {}
-
-export { className as class, content, onContentChange }
+let {
+  content = $bindable(),
+  class: className,
+  onContentChange,
+}: Props = $props()
 
 // https://svelte.dev/docs/component-directives#style-props
-onMount(() => {
+$effect(() => {
   const language = "python"
   hljs.registerLanguage(language, python)
   CodeElement.innerHTML = hljs.highlight(content, { language }).value
@@ -28,7 +35,6 @@ onMount(() => {
       content = code ?? ""
       onContentChange(content)
       el.innerHTML = hljs.highlight(content, { language }).value
-      await tick()
     })()
       .then()
       .catch(console.error)
@@ -36,9 +42,7 @@ onMount(() => {
 })
 </script>
 
-<code bind:this={CodeElement} class={cn("block", className)}>
-  {content}
-</code>
+<code bind:this={CodeElement} class={cn("block", className)}></code>
 
 <style>
 </style>

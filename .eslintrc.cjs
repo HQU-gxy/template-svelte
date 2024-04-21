@@ -13,6 +13,20 @@ module.exports = {
             files: ["*.svelte"],
             parser: 'svelte-eslint-parser',
             parserOptions: {
+                parser: '@typescript-eslint/parser',
+                svelteFeatures: {
+                    experimentalGenerics: true
+                }
+            }
+        },
+        {
+            "files": ["*.svelte.js"],
+            "parser": "svelte-eslint-parser",
+        },
+        {
+            "files": ["*.svelte.ts"],
+            "parser": "svelte-eslint-parser",
+            "parserOptions": {
                 parser: '@typescript-eslint/parser'
             }
         },
@@ -20,7 +34,7 @@ module.exports = {
             files: ["*.ts", "*.svelte"],
             rules: {
                 "@typescript-eslint/naming-convention": [
-                    "warn",
+                    "off",
                     {
                         "selector": "variable",
                         "format": ["camelCase", "UPPER_CASE", "snake_case"]
@@ -33,7 +47,9 @@ module.exports = {
                 "@typescript-eslint/member-delimiter-style": "off",
                 "@typescript-eslint/explicit-function-return-type": "off",
                 "no-template-curly-in-string": "warn",
-                "@typescript-eslint/promise-function-async":"off",
+                "@typescript-eslint/promise-function-async": "off",
+                "@typescript-eslint/no-non-null-assertion": "warn",
+                "no-tabs": ["error", { allowIndentationTabs: true }]
             }
         }
     ]

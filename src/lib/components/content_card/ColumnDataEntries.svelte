@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
 import Jar from "$lib/components/jar/Jar.svelte"
 import { Button } from "$lib/components/ui/button/index"
@@ -14,7 +16,11 @@ type AssertEqual<T, Expected> = T extends Expected
 const _: AssertEqual<TableEntries, PlotEntries> = true
 type Entries = TableEntries
 
-export let entries: Entries
+interface Props {
+  entries: Entries
+}
+
+const { entries = $bindable() }: Props = $props()
 </script>
 
 {#each Object.entries(entries) as [k, v]}
@@ -29,7 +35,7 @@ export let entries: Entries
             <input
               class="flex-grow mr-4"
               value={number}
-              on:input={// https://stackoverflow.com/questions/62278480/add-onchange-handler-to-input-in-svelte
+              oninput={// https://stackoverflow.com/questions/62278480/add-onchange-handler-to-input-in-svelte
               (e) => {
                 const target = e.target
                 if (target instanceof HTMLInputElement) {

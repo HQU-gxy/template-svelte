@@ -1,1 +1,4 @@
 *.cjs
+svelte.config.js
+tsconfig.json
+

@@ -1,43 +1,43 @@
-<svelte:options immutable={true} />
+<svelte:options immutable={true} runes={true} />
 
 <script lang="ts">
 import * as Resizable from "$lib/components/ui/resizable"
 import ContentCard from "$lib/components/content_card/ContentCard.svelte"
-import { template_store } from "./lib/store/template"
-import { tick } from "svelte"
+import { default_template } from "$lib/store/template"
 import { get } from "svelte/store"
+import { tick } from "svelte"
 import { curry, always as constantly, partial } from "ramda"
 import type { HtmlContent, PlotContent, TableContent } from "./types/template"
 
 type Content = HtmlContent | PlotContent | TableContent
 // https://svelte.dev/repl/1afe59d2c99d4919a34985e34c5913ba?version=3.35.0
-$: contents = $template_store.contents
-$: contents_string = JSON.stringify(contents, null, 2)
+// https://github.com/sveltejs/svelte/issues/3455
+const template = $state(default_template)
+const contents = $derived(template.contents)
+const contents_string = $derived(JSON.stringify(contents, null, 2))
 
-const onAdd = async (i: number) => {
+const handleAdd = async (i: number) => {
   const new_content: HtmlContent = { tag: "p", content: "" }
   const s_start = [...contents.slice(0, i + 1)]
   const s_end = [...contents.slice(i + 1)]
-  contents = [...s_start, new_content, ...s_end]
-  $template_store.contents = contents
+  template.contents = [...s_start, new_content, ...s_end]
 }
 
-const onDelete = async (i: number) => {
-  contents = contents.filter((_, j) => i !== j)
-  $template_store.contents = contents
+const handleDelete = async (i: number) => {
+  template.contents = contents.filter((_, j) => i !== j)
 }
-// https://github.com/sveltejs/svelte/issues/3455
+
 </script>
 
 <main class="w-screen h-screen p-0 m-0">
   <Resizable.PaneGroup direction="horizontal" class="border rounded-lg">
     <Resizable.Pane defaultSize={38} minSize={25}>
       <div class="flex flex-col h-full p-6">
-        {#each contents as content, i}
+        {#each contents as _, i}
           <ContentCard
-            bind:content
-            onDelete={() => onDelete(i)}
-            onAdd={() => onAdd(i)}
+            bind:content={template.contents[i] as Content}
+            onDelete={() => handleDelete(i)}
+            onAdd={() => handleAdd(i)}
           />
         {/each}
       </div>
@@ -47,13 +47,11 @@ const onDelete = async (i: number) => {
     <Resizable.Pane defaultSize={75} collapsible={true} collapsedSize={10}>
       <div class={"flex h-full p-6"}>
         <div>
-          {#key $template_store.contents}
-            {contents_string}
-          {/key}
+          {contents_string}
         </div>
         <button
-          on:click={() => {
-            console.info(get(template_store).contents)
+          onclick={() => {
+            console.info(template.contents)
           }}
         >
           Status

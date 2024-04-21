@@ -1,4 +1,4 @@
-<svelte:options immutable={false} />
+<svelte:options immutable={false} runes={true} />
 
 <script lang="ts">
 import Jar from "$lib/components/jar/Jar.svelte"
@@ -9,70 +9,45 @@ import * as Select from "$lib/components/ui/select"
 import Delete from "svelte-material-icons/Delete.svelte"
 import ColumnDataEntries from "./ColumnDataEntries.svelte"
 import type { HtmlContent, PlotContent, TableContent } from "src/types/template"
-import { isNullish } from "utility-types"
+import { isNullish, type Nullish } from "utility-types"
 import { get } from "svelte/store"
 import { tick } from "svelte"
 
 type Content = HtmlContent | PlotContent | TableContent
+type OnDelete = () => Promise<void>
+type OnAdd = () => Promise<void>
+
+interface Props {
+  content: Content
+  onDelete: OnDelete | Nullish
+  onAdd: OnAdd | Nullish
+}
 
 // https://www.reddit.com/r/sveltejs/comments/e9zqn1/why_use_custom_events/
-export let content: Content
-export let onDelete: (() => Promise<void>) | null = null
-export let onAdd: (() => Promise<void>) | null = null
+const { content = $bindable(), onDelete = null, onAdd = null }: Props = $props()
 
-// https://hygraph.com/blog/data-binding-in-svelte
-// https://svelte.dev/blog/runes#runtime-reactivity
-$: htmlContent =
+const htmlContent = $derived(
   "content" in content && "tag" in content
     ? (content as HtmlContent)
-    : undefined
-$: plotContent =
+    : undefined,
+)
+
+const plotContent = $derived(
   "data" in content && "plot_type" in content
     ? (content as PlotContent)
-    : undefined
-$: tableContent =
+    : undefined,
+)
+
+const tableContent = $derived(
   "data" in content && "table_type" in content
     ? (content as TableContent)
-    : undefined
+    : undefined,
+)
 
-const fruits = [
-  { value: "apple", label: "Apple" },
-  { value: "banana", label: "Banana" },
-  { value: "blueberry", label: "Blueberry" },
-  { value: "grapes", label: "Grapes" },
-  { value: "pineapple", label: "Pineapple" },
-] as const
-
-type Fruit = (typeof fruits)[number]["value"]
-
-$: selected = undefined as { value: Fruit; label?: string } | undefined
 </script>
 
 <Card.Root>
   <Card.Header class="flex flex-row items-center justify-between">
-    <Select.Root
-      {selected}
-      onSelectedChange={(s) => {
-        if (s !== undefined) {
-          selected = s
-        }
-      }}
-    >
-      <Select.Trigger class="w-[180px]">
-        <Select.Value placeholder="Select a fruit" />
-      </Select.Trigger>
-      <Select.Content>
-        <Select.Group>
-          <Select.Label>Fruits</Select.Label>
-          {#each fruits as fruit}
-            <Select.Item value={fruit.value} label={fruit.label}
-              >{fruit.label}</Select.Item
-            >
-          {/each}
-        </Select.Group>
-      </Select.Content>
-    </Select.Root>
-
     <div class="flex justify-even items-center [&>*]:ml-2">
       {#if onAdd !== undefined}
         <Button
